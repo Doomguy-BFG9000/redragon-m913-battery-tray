@@ -329,7 +329,7 @@ internal static class TrayIconFactory
 
         string text = percent is int value ? value.ToString() : "--";
         using var textPath = new GraphicsPath();
-        using var fontFamily = new FontFamily("Segoe UI Semibold");
+        using var fontFamily = new FontFamily("Segoe UI Variable Text");
         using var typographic = (StringFormat)StringFormat.GenericTypographic.Clone();
         textPath.AddString(
             text,

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2 - 2026-09-12
+
+- Matched the tray percentage typeface to the Windows 11 system typography by using Segoe UI Variable Text Regular.
+
 ## 1.5.1 - 2026-09-12
 
 - Reduced the tray percentage's font weight and shadow outline while retaining the large high-contrast number.
