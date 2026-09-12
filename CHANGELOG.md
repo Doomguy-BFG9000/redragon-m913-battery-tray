@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 - 2026-09-12
+
+- Preserved the typeface proportions instead of stretching digits independently on each axis.
+- Added clear internal padding around the percentage and made the battery frame slightly taller.
+- Removed the artificial dark glyph stroke so the number follows the system typeface more faithfully.
+
 ## 1.5.2 - 2026-09-12
 
 - Matched the tray percentage typeface to the Windows 11 system typography by using Segoe UI Variable Text Regular.

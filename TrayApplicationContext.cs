@@ -311,7 +311,7 @@ internal static class TrayIconFactory
             _ => Color.FromArgb(42, 220, 105)
         };
 
-        RectangleF body = new(1.75f, 2.25f, 57f, 59f);
+        RectangleF body = new(1.75f, 1.75f, 57f, 60.5f);
         using var background = new SolidBrush(
             percent is <= 20 && criticalAlertBright
                 ? Color.FromArgb(235, 112, 0, 0)
@@ -325,7 +325,7 @@ internal static class TrayIconFactory
         graphics.FillRoundedRectangle(background, body, 8f);
         graphics.DrawRoundedRectangle(outline, body, 8f);
         using var terminal = new SolidBrush(accent);
-        graphics.FillRoundedRectangle(terminal, new RectangleF(58f, 21f, 5f, 22f), 2f);
+        graphics.FillRoundedRectangle(terminal, new RectangleF(58f, 20.5f, 5.5f, 23f), 2f);
 
         string text = percent is int value ? value.ToString() : "--";
         using var textPath = new GraphicsPath();
@@ -342,25 +342,28 @@ internal static class TrayIconFactory
         RectangleF glyphBounds = textPath.GetBounds();
         RectangleF target = text.Length switch
         {
-            >= 3 => new RectangleF(4.5f, 9f, 51.5f, 46f),
-            2 => new RectangleF(4.5f, 6f, 51.5f, 51f),
-            _ => new RectangleF(5f, 5f, 50f, 53f)
+            >= 3 => new RectangleF(5f, 7f, 50f, 50f),
+            2 => new RectangleF(5.75f, 4.75f, 48.5f, 54.5f),
+            _ => new RectangleF(6f, 4.5f, 48f, 55f)
         };
+        float scale = Math.Min(target.Width / glyphBounds.Width, target.Height / glyphBounds.Height);
+        float scaledWidth = glyphBounds.Width * scale;
+        float scaledHeight = glyphBounds.Height * scale;
+        var fitted = new RectangleF(
+            target.Left + ((target.Width - scaledWidth) / 2f),
+            target.Top + ((target.Height - scaledHeight) / 2f),
+            scaledWidth,
+            scaledHeight);
         PointF[] destination =
         [
-            new(target.Left, target.Top),
-            new(target.Right, target.Top),
-            new(target.Left, target.Bottom)
+            new(fitted.Left, fitted.Top),
+            new(fitted.Right, fitted.Top),
+            new(fitted.Left, fitted.Bottom)
         ];
         using var transform = new Matrix(glyphBounds, destination);
         textPath.Transform(transform);
 
-        using var glyphOutline = new Pen(Color.FromArgb(175, 0, 0, 0), 1.1f)
-        {
-            LineJoin = LineJoin.Round
-        };
         using var textBrush = new SolidBrush(Color.White);
-        graphics.DrawPath(glyphOutline, textPath);
         graphics.FillPath(textBrush, textPath);
         return bitmap;
     }

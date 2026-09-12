@@ -49,6 +49,6 @@ Local status and error files are stored in `%LOCALAPPDATA%\RedragonBatteryTray`.
 
 ## Integrity and signing
 
-Release archives include `SHA256SUMS.txt` and a separate ZIP checksum. Version 1.5.2 is an unsigned open-source community release, so Windows can display an unknown-publisher or SmartScreen reputation warning. Verify the published SHA-256 checksum if Windows shows a warning.
+Release archives include `SHA256SUMS.txt` and a separate ZIP checksum. Version 1.5.3 is an unsigned open-source community release, so Windows can display an unknown-publisher or SmartScreen reputation warning. Verify the published SHA-256 checksum if Windows shows a warning.
 
 This project is unofficial and is not affiliated with or endorsed by Redragon. See [NOTICE.md](NOTICE.md).
