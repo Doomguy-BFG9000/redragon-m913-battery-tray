@@ -87,7 +87,7 @@ $estimatedSizeKb = [math]::Ceiling((Get-ChildItem -LiteralPath $installFolder -F
     Measure-Object -Property Length -Sum).Sum / 1KB)
 $uninstallValues = @{
     DisplayName = 'Redragon M913 Battery Tray'
-    DisplayVersion = '1.7.0'
+    DisplayVersion = '1.7.1'
     Publisher = 'Independent open-source utility'
     InstallLocation = $installFolder
     DisplayIcon = $installedExe
@@ -105,4 +105,4 @@ if (-not $NoStart) {
     Start-Process -FilePath $installedExe -WorkingDirectory $installFolder
 }
 
-Write-Host 'Installed Redragon M913 Battery Tray 1.7.0 for the current Windows user.'
+Write-Host 'Installed Redragon M913 Battery Tray 1.7.1 for the current Windows user.'

@@ -1,6 +1,6 @@
-# Release status: 1.7.0 pilot
+# Release status: 1.7.1 pilot
 
-This package is suitable for public pilot testing within the verified scope below. Version 1.7.0 adds a local control panel; it is not described as universally compatible because only one physical M913 hardware identity and one Windows installation were available for direct validation.
+This package is suitable for public pilot testing within the verified scope below. Version 1.7.0 added a local control panel and 1.7.1 adds official Windows taskbar visibility setup; it is not described as universally compatible because only one physical M913 hardware identity and one Windows installation were available for direct validation.
 
 ## Verified on physical hardware
 
@@ -29,6 +29,6 @@ This package is suitable for public pilot testing within the verified scope belo
 
 ## Known publication limitation
 
-The 1.7.0 binaries are intentionally unsigned. Windows can therefore show an unknown-publisher or SmartScreen reputation warning. Release archives include SHA-256 checksums. Packaging locally does not itself publish a GitHub release.
+The 1.7.1 binaries are intentionally unsigned. Windows can therefore show an unknown-publisher or SmartScreen reputation warning. Release archives include SHA-256 checksums. Packaging locally does not itself publish a GitHub release.
 
 Recovery is bounded to five restarts in ten minutes. Killing both processes together, preventing process creation, or repeatedly crashing the application can require a manual start. The guard is not a Windows service and does not bypass deliberate Exit or session ending. The Startup shortcut was launched manually in testing; another physical reboot was not performed.

@@ -12,4 +12,6 @@ It reads locally enumerated HID device interfaces whose identifiers match the do
 
 A small second process watches the tray process and restarts it after an unexpected exit. It exits on deliberate Exit, update/uninstall, or Windows session ending. No remote monitoring is used.
 
+The app can open the official Windows taskbar Settings page so the user can choose to keep the battery icon visible. It does not edit Windows notification-area preferences itself. A small local marker records that the one-time visibility explanation has been shown.
+
 These files stay on the computer. The standard uninstall removes them; `Uninstall.ps1 -KeepLogs` preserves them for troubleshooting.

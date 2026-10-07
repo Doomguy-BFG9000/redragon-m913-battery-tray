@@ -11,6 +11,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly System.Windows.Forms.Timer _timer;
     private readonly System.Windows.Forms.Timer _criticalAlertTimer;
     private readonly System.Windows.Forms.Timer _healthTimer;
+    private System.Windows.Forms.Timer? _visibilityPromptTimer;
     private int _healthTicks;
     private bool _exiting;
     private readonly ToolStripMenuItem _statusItem;
@@ -39,6 +40,11 @@ internal sealed class TrayApplicationContext : ApplicationContext
         };
         _startWithWindowsItem.CheckedChanged += (_, _) =>
             AutostartManager.SetEnabled(_startWithWindowsItem.Checked);
+
+        var keepVisibleItem = new ToolStripMenuItem(AppText.IsArabic
+            ? "إبقاء نسبة البطارية ظاهرة…"
+            : "Keep battery percentage visible…");
+        keepVisibleItem.Click += (_, _) => ShowVisibilitySetup(markPrompted: false);
 
         var aboutItem = new ToolStripMenuItem(AppText.About);
         aboutItem.Click += (_, _) => MessageBox.Show(
@@ -74,6 +80,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             refreshItem,
             openRedragonItem,
             _startWithWindowsItem,
+            keepVisibleItem,
             languageItem,
             new ToolStripSeparator(),
             aboutItem,
@@ -115,7 +122,53 @@ internal sealed class TrayApplicationContext : ApplicationContext
             }
         };
         _healthTimer.Start();
+        ScheduleVisibilitySetupIfNeeded();
         _ = RefreshAsync();
+    }
+
+    private static string VisibilityPromptMarkerPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "RedragonBatteryTray",
+        "visibility-setup-v1.txt");
+
+    private void ScheduleVisibilitySetupIfNeeded()
+    {
+        if (File.Exists(VisibilityPromptMarkerPath))
+            return;
+
+        _visibilityPromptTimer = new System.Windows.Forms.Timer { Interval = 1_500 };
+        _visibilityPromptTimer.Tick += (_, _) =>
+        {
+            _visibilityPromptTimer?.Stop();
+            _visibilityPromptTimer?.Dispose();
+            _visibilityPromptTimer = null;
+            ShowVisibilitySetup(markPrompted: true);
+        };
+        _visibilityPromptTimer.Start();
+    }
+
+    private static void ShowVisibilitySetup(bool markPrompted)
+    {
+        string message = AppText.IsArabic
+            ? "يتحكم Windows في الأيقونات التي تبقى ظاهرة بجوار الساعة. اضغط «موافق»، ثم افتح «أيقونات علبة النظام الأخرى» وفعّل Redragon M913 Battery Tray. سيحفظ Windows اختيارك للتحديثات القادمة."
+            : "Windows controls which icons stay visible beside the clock. Select OK, then open Other system tray icons and turn on Redragon M913 Battery Tray. Windows will keep that choice for future updates.";
+
+        DialogResult result = MessageBox.Show(
+            message,
+            AppText.IsArabic ? "إبقاء نسبة البطارية ظاهرة" : "Keep battery percentage visible",
+            MessageBoxButtons.OKCancel,
+            MessageBoxIcon.Information,
+            MessageBoxDefaultButton.Button1,
+            AppText.MessageOptions);
+
+        if (markPrompted)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(VisibilityPromptMarkerPath)!);
+            File.WriteAllText(VisibilityPromptMarkerPath, DateTimeOffset.Now.ToString("O"));
+        }
+
+        if (result == DialogResult.OK)
+            Process.Start(new ProcessStartInfo("ms-settings:taskbar") { UseShellExecute = true });
     }
 
     private void ChangeLanguage(string language)
@@ -255,6 +308,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _exiting = true;
         _healthTimer.Stop();
         _healthTimer.Dispose();
+        _visibilityPromptTimer?.Stop();
+        _visibilityPromptTimer?.Dispose();
         _timer.Stop();
         _timer.Dispose();
         _criticalAlertTimer.Stop();

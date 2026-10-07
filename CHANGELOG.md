@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1 - 2026-10-07
+
+- Added a one-time, bilingual setup prompt and a permanent tray-menu action that open the official Windows taskbar page for keeping the battery percentage visible beside the clock.
+- Retained the app's fixed icon GUID so Windows preserves the user's visibility choice across app updates.
+- Avoided unsupported registry manipulation: Microsoft documents that only the user can promote an icon from the overflow area.
+
 ## 1.7.0 - 2026-10-07
 
 - Added a polished control panel with a large, high-contrast battery reading, clear health state, last-update time, manual refresh, Windows startup control, and a direct link to the Redragon software.

@@ -9,7 +9,7 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>RedragonBatteryTray</AssemblyName>
     <RootNamespace>RedragonBatteryTray</RootNamespace>
-    <Version>1.7.0</Version>
+    <Version>1.7.1</Version>
     <Authors>Redragon M913 Battery Tray contributors</Authors>
     <Title>Redragon M913 Battery Tray</Title>
     <Product>Redragon M913 Battery Tray</Product>

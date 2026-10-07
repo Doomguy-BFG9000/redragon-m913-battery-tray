@@ -30,6 +30,7 @@ Download the current tested package from [GitHub Releases](https://github.com/Do
 1. Extract the entire ZIP archive.
 2. Double-click `Install.cmd`.
 3. The battery icon appears in the notification area. Windows may initially place a new icon in the overflow menu; use Taskbar settings to keep it visible.
+4. On first launch, follow the bilingual visibility prompt and turn on **Redragon M913 Battery Tray** under **Other system tray icons**. Only Windows and the signed-in user can make this choice.
 
 The installer is per-user, requires no administrator rights, installs under `%LOCALAPPDATA%\Programs\RedragonM913BatteryTray`, enables two current-user startup paths, and registers an uninstall entry in Windows Settings.
 
@@ -37,7 +38,7 @@ The installer is per-user, requires no administrator rights, installs under `%LO
 
 - Left-click: show the current percentage in a notification.
 - Double-click: open the control panel.
-- Right-click: open the control panel, refresh, toggle startup, switch Arabic/English, open Redragon, view About, or exit.
+- Right-click: open the control panel, keep the battery percentage visible, refresh, toggle startup, switch Arabic/English, open Redragon, view About, or exit.
 
 The original Redragon program does not need to remain open. If the mouse is sleeping, the reading can temporarily become unavailable and returns after the mouse wakes.
 
