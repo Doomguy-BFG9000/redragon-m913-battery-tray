@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.7.0 - 2026-10-07
+
+- Added a polished control panel with a large, high-contrast battery reading, clear health state, last-update time, manual refresh, Windows startup control, and a direct link to the Redragon software.
+- Double-clicking the tray icon now opens the control panel; the original right-click tray menu remains available for quick actions.
+- Kept the release self-contained and offline: the new interface uses the built-in Windows Forms stack with no network service or external telemetry.
+
+## 1.6.2 - 2026-10-03
+
+- Added a current-user Startup-folder shortcut alongside the existing Run registry entry.
+- The installer verifies the shortcut exists; the app's startup toggle creates or removes both startup paths.
+- Replaced a blocked Scheduled Tasks fallback with the per-user shortcut, which needs no elevated permission.
+
+## 1.6.0 - 2026-09-17
+
+- Launch through the same-user desktop shell outside the host's packaged runtime and kill-on-close jobs; use native job breakaway as a fallback.
+- Added a small recovery guard for unexpected exits, with a five-restarts-per-ten-minutes limit.
+- Deliberate Exit, language changes, updates/uninstall and Windows session ending suppress recovery.
+- Check tray registration every ten seconds and re-add it if Windows loses it.
+- Added bounded local lifecycle logging and graceful shutdown for updates/uninstall.
+
 ## 1.5.3 - 2026-09-12
 
 - Preserved the typeface proportions instead of stretching digits independently on each axis.

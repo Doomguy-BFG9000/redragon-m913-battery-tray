@@ -19,12 +19,18 @@ $running = Get-Process RedragonBatteryTray -ErrorAction SilentlyContinue |
         try { $_.Path -eq $installedExe } catch { $false }
     }
 if ($running) {
+    Start-Process -FilePath $installedExe -ArgumentList '--request-stop' -Wait -WindowStyle Hidden
+    $running | Wait-Process -Timeout 3 -ErrorAction SilentlyContinue
+    $running = Get-Process RedragonBatteryTray -ErrorAction SilentlyContinue |
+        Where-Object { try { $_.Path -eq $installedExe } catch { $false } }
     $running | Stop-Process -Force
     $running | Wait-Process -Timeout 5 -ErrorAction SilentlyContinue
 }
 
 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
     -Name 'RedragonBatteryTray' -ErrorAction SilentlyContinue
+$startupShortcut = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::Startup)) 'Redragon M913 Battery Tray.lnk'
+Remove-Item -LiteralPath $startupShortcut -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\RedragonM913BatteryTray' `
     -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath 'HKCU:\Software\RedragonM913BatteryTray' `

@@ -7,14 +7,16 @@ namespace RedragonBatteryTray;
 
 internal sealed class TrayApplicationContext : ApplicationContext
 {
-    private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string RunValueName = "RedragonBatteryTray";
     private readonly NativeTrayIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _timer;
     private readonly System.Windows.Forms.Timer _criticalAlertTimer;
+    private readonly System.Windows.Forms.Timer _healthTimer;
+    private int _healthTicks;
+    private bool _exiting;
     private readonly ToolStripMenuItem _statusItem;
     private readonly ToolStripMenuItem _startWithWindowsItem;
     private readonly BatteryStabilizer _stabilizer = new(confirmationsRequired: 2);
+    private ControlPanelForm? _controlPanel;
     private bool _refreshing;
     private bool _criticalAlertBright = true;
     private int? _lastPercent;
@@ -22,6 +24,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
     internal TrayApplicationContext()
     {
         _statusItem = new ToolStripMenuItem(AppText.Reading) { Enabled = false };
+        var controlPanelItem = new ToolStripMenuItem(AppText.IsArabic ? "لوحة التحكم…" : "Open control panel…");
+        controlPanelItem.Click += (_, _) => ShowControlPanel();
         var refreshItem = new ToolStripMenuItem(AppText.RefreshNow);
         refreshItem.Click += async (_, _) => await RefreshAsync();
 
@@ -31,10 +35,10 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _startWithWindowsItem = new ToolStripMenuItem(AppText.StartWithWindows)
         {
             CheckOnClick = true,
-            Checked = IsAutoStartEnabled()
+            Checked = AutostartManager.IsEnabled(Environment.ProcessPath)
         };
         _startWithWindowsItem.CheckedChanged += (_, _) =>
-            SetAutoStart(_startWithWindowsItem.Checked);
+            AutostartManager.SetEnabled(_startWithWindowsItem.Checked);
 
         var aboutItem = new ToolStripMenuItem(AppText.About);
         aboutItem.Click += (_, _) => MessageBox.Show(
@@ -59,13 +63,14 @@ internal sealed class TrayApplicationContext : ApplicationContext
         languageItem.DropDownItems.AddRange([arabicItem, englishItem]);
 
         var exitItem = new ToolStripMenuItem(AppText.Exit);
-        exitItem.Click += (_, _) => ExitThread();
+        exitItem.Click += (_, _) => RequestExit("user Exit menu");
 
         var menu = new ContextMenuStrip { RightToLeft = AppText.MenuDirection };
         menu.Items.AddRange(new ToolStripItem[]
         {
             _statusItem,
             new ToolStripSeparator(),
+            controlPanelItem,
             refreshItem,
             openRedragonItem,
             _startWithWindowsItem,
@@ -80,7 +85,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
             AppText.ReadingTray,
             menu,
             ShowCurrentReading,
-            OpenRedragon);
+            ShowControlPanel);
 
         _timer = new System.Windows.Forms.Timer { Interval = 60_000 };
         _timer.Tick += async (_, _) => await RefreshAsync();
@@ -99,6 +104,17 @@ internal sealed class TrayApplicationContext : ApplicationContext
             UpdateTrayVisual(percent);
         };
 
+        _healthTimer = new System.Windows.Forms.Timer { Interval = 1_000 };
+        _healthTimer.Tick += (_, _) =>
+        {
+            if (AppRecovery.StopRequested) { RequestExit("external stop request"); return; }
+            if (++_healthTicks % 10 == 0)
+            {
+                AppRecovery.EnsureRunning();
+                _notifyIcon.EnsurePresent();
+            }
+        };
+        _healthTimer.Start();
         _ = RefreshAsync();
     }
 
@@ -116,18 +132,25 @@ internal sealed class TrayApplicationContext : ApplicationContext
                 UseShellExecute = true
             });
         }
+        RequestExit("language restart");
+    }
+
+    private void RequestExit(string reason)
+    {
+        AppRecovery.Stop(reason);
         ExitThread();
     }
 
     private async Task RefreshAsync()
     {
-        if (_refreshing)
+        if (_refreshing || _exiting)
             return;
         _refreshing = true;
 
         try
         {
             StableBatteryReading stableReading = await Task.Run(() => M913BatteryReader.ReadStable());
+            if (_exiting) return;
             int displayedPercent = _stabilizer.Update(stableReading.Reading.Percent);
             AppLog.WriteStatus(stableReading, displayedPercent);
             _lastPercent = displayedPercent;
@@ -138,16 +161,19 @@ internal sealed class TrayApplicationContext : ApplicationContext
             else
                 _criticalAlertTimer.Stop();
             _statusItem.Text = AppText.BatteryStatus(displayedPercent);
+            UpdateControlPanel();
         }
         catch (Exception ex)
         {
             AppLog.Write(ex);
+            if (_exiting) return;
             _lastPercent = null;
             _criticalAlertTimer.Stop();
             _notifyIcon.Update(
                 TrayIconFactory.Create(null),
                 AppText.UnavailableTray);
             _statusItem.Text = AppText.UnavailableStatus;
+            UpdateControlPanel();
         }
         finally
         {
@@ -160,6 +186,37 @@ internal sealed class TrayApplicationContext : ApplicationContext
         _notifyIcon.Update(
             TrayIconFactory.Create(percent, _criticalAlertBright),
             AppText.TrayPercent(percent));
+    }
+
+    private void ShowControlPanel()
+    {
+        if (_exiting)
+            return;
+
+        if (_controlPanel is { IsDisposed: false })
+        {
+            _controlPanel.BringToFront();
+            _controlPanel.Activate();
+            return;
+        }
+
+        _controlPanel = new ControlPanelForm(
+            getPercent: () => _lastPercent,
+            isRefreshing: () => _refreshing,
+            refresh: RefreshAsync,
+            getAutostart: () => _startWithWindowsItem.Checked,
+            setAutostart: enabled => _startWithWindowsItem.Checked = enabled,
+            openRedragon: OpenRedragon);
+        _controlPanel.FormClosed += (_, _) => _controlPanel = null;
+        _controlPanel.Show();
+        _controlPanel.Activate();
+        UpdateControlPanel();
+    }
+
+    private void UpdateControlPanel()
+    {
+        if (_controlPanel is { IsDisposed: false })
+            _controlPanel.UpdateReading(_lastPercent, _refreshing);
     }
 
     private void ShowCurrentReading()
@@ -192,31 +249,17 @@ internal sealed class TrayApplicationContext : ApplicationContext
         });
     }
 
-    private static bool IsAutoStartEnabled()
-    {
-        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(RunKeyPath);
-        string? processPath = Environment.ProcessPath;
-        return processPath is not null && key?.GetValue(RunValueName) is string value &&
-               value.Contains(processPath, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static void SetAutoStart(bool enabled)
-    {
-        using RegistryKey? key = Registry.CurrentUser.CreateSubKey(RunKeyPath, true);
-        if (key is null)
-            return;
-        if (enabled)
-            key.SetValue(RunValueName, $"\"{Environment.ProcessPath}\"");
-        else
-            key.DeleteValue(RunValueName, false);
-    }
-
     protected override void ExitThreadCore()
     {
+        if (_exiting) return;
+        _exiting = true;
+        _healthTimer.Stop();
+        _healthTimer.Dispose();
         _timer.Stop();
         _timer.Dispose();
         _criticalAlertTimer.Stop();
         _criticalAlertTimer.Dispose();
+        _controlPanel?.Close();
         _notifyIcon.Dispose();
         base.ExitThreadCore();
     }

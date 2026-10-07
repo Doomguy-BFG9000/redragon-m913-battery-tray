@@ -9,7 +9,7 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>RedragonBatteryTray</AssemblyName>
     <RootNamespace>RedragonBatteryTray</RootNamespace>
-    <Version>1.5.3</Version>
+    <Version>1.7.0</Version>
     <Authors>Redragon M913 Battery Tray contributors</Authors>
     <Title>Redragon M913 Battery Tray</Title>
     <Product>Redragon M913 Battery Tray</Product>
@@ -33,4 +33,8 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Build-Release can create a source archive beneath this project. Never compile that archived copy. -->
+    <Compile Remove="release\**\*.cs" />
+  </ItemGroup>
 </Project>

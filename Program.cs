@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Win32;
 
 namespace RedragonBatteryTray;
 
@@ -13,6 +14,31 @@ internal static class Program
         if (TryRunProbe(args))
             return;
 
+        bool independentAttempted = args.Contains("--independent");
+        args = args.Where(arg => arg != "--independent").ToArray();
+        if (args.Contains("--desktop-bootstrap"))
+        {
+            var info = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false, CreateNoWindow = true };
+            foreach (string arg in args.Where(arg => arg != "--desktop-bootstrap")) info.ArgumentList.Add(arg);
+            info.ArgumentList.Add("--independent");
+            Process.Start(info)?.Dispose();
+            return;
+        }
+        if (IndependentProcess.TryRelaunch(args, independentAttempted))
+            return;
+        if (args.Length == 1 && args[0] == "--request-stop")
+        {
+            AppRecovery.RequestStop();
+            return;
+        }
+        if (args.Length == 1 && args[0] == "--set-autostart")
+        {
+            AutostartManager.SetEnabled(true);
+            return;
+        }
+        if (AppRecovery.TryRunGuardian(args))
+            return;
+
         WaitForPreviousInstance(args);
 
         using var mutex = new Mutex(true, MutexName, out bool isFirstInstance);
@@ -24,8 +50,26 @@ internal static class Program
         Application.ThreadException += (_, eventArgs) => AppLog.Write(eventArgs.Exception);
         AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
             AppLog.Write(eventArgs.ExceptionObject as Exception ?? new Exception("Unknown unhandled error"));
-
-        Application.Run(new TrayApplicationContext());
+        TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
+        {
+            AppLog.Write(eventArgs.Exception);
+            eventArgs.SetObserved();
+        };
+        SessionEndingEventHandler sessionEnding = (_, _) => AppRecovery.Stop("Windows session ending");
+        SystemEvents.SessionEnding += sessionEnding;
+        AppLog.Event($"Main started version={Application.ProductVersion}; InJob={IndependentProcess.IsInJob()}; JobLimits=0x{IndependentProcess.CurrentJobLimits():X}; Packaged={IndependentProcess.HasPackageIdentity()}.");
+        try
+        {
+            AppRecovery.Start();
+            Application.Run(new TrayApplicationContext());
+        }
+        catch (Exception exception) { AppLog.Write(exception); }
+        finally
+        {
+            AppLog.Event("Main message loop ended.");
+            SystemEvents.SessionEnding -= sessionEnding;
+            AppRecovery.Dispose();
+        }
     }
 
     private static void WaitForPreviousInstance(string[] args)

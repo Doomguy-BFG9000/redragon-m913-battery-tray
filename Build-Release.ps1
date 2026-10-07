@@ -9,7 +9,7 @@ $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE = 'false'
 $env:DOTNET_NOLOGO = '1'
-$version = '1.5.3'
+$version = '1.7.0'
 $packageName = "Redragon-M913-Battery-Tray-$version-win-x64"
 $outputRootFull = [IO.Path]::GetFullPath($OutputRoot)
 $staging = [IO.Path]::GetFullPath((Join-Path $outputRootFull $packageName))
@@ -66,7 +66,7 @@ if (Test-Path -LiteralPath $sourceStaging) {
 }
 New-Item -ItemType Directory -Path $sourceStaging -Force | Out-Null
 $sourceFiles = @(
-    'AppLog.cs', 'AppText.cs', 'M913BatteryReader.cs', 'NativeTrayIcon.cs',
+    'AppLog.cs', 'AppText.cs', 'AppRecovery.cs', 'AutostartManager.cs', 'IndependentProcess.cs', 'M913BatteryReader.cs', 'NativeTrayIcon.cs',
     'Program.cs', 'TrayApplicationContext.cs', 'RedragonBatteryTray.csproj',
     'app.manifest', 'app.ico', 'global.json', '.gitignore', 'Build-Release.ps1', 'Generate-AppIcon.ps1',
     'Install.ps1', 'Install.cmd', 'Uninstall.ps1', 'Uninstall.cmd',

@@ -63,9 +63,18 @@ internal sealed class NativeTrayIcon : IDisposable
         Icon previous = _icon;
         _icon = icon;
         _text = text;
-        var data = CreateData(NifIcon | NifTip | NifGuid | NifShowTip);
-        Shell_NotifyIcon(NimModify, ref data);
+        EnsurePresent();
         previous.Dispose();
+    }
+
+    internal void EnsurePresent()
+    {
+        if (_disposed) return;
+        var data = CreateData(NifIcon | NifTip | NifGuid | NifShowTip);
+        if (Shell_NotifyIcon(NimModify, ref data)) return;
+        _added = false;
+        Add();
+        AppLog.Event(_added ? "Tray icon restored after lost registration." : "Tray registration failed; retrying on next health check.");
     }
 
     internal void ShowBalloon(string title, string message, ToolTipIcon icon)
@@ -90,6 +99,8 @@ internal sealed class NativeTrayIcon : IDisposable
     {
         var data = CreateData(NifMessage | NifIcon | NifTip | NifGuid | NifShowTip);
         _added = Shell_NotifyIcon(NimAdd, ref data);
+        if (!_added)
+            _added = Shell_NotifyIcon(NimModify, ref data);
         if (_added)
         {
             data.VersionOrTimeout = NotifyIconVersion4;

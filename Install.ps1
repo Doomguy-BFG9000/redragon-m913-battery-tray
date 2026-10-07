@@ -26,6 +26,10 @@ $running = Get-Process RedragonBatteryTray -ErrorAction SilentlyContinue |
         try { $_.Path -eq $installedExe } catch { $false }
     }
 if ($running) {
+    Start-Process -FilePath $installedExe -ArgumentList '--request-stop' -Wait -WindowStyle Hidden
+    $running | Wait-Process -Timeout 3 -ErrorAction SilentlyContinue
+    $running = Get-Process RedragonBatteryTray -ErrorAction SilentlyContinue |
+        Where-Object { try { $_.Path -eq $installedExe } catch { $false } }
     $running | Stop-Process -Force
     $running | Wait-Process -Timeout 5 -ErrorAction SilentlyContinue
 }
@@ -69,6 +73,11 @@ foreach ($fileName in $filesToInstall) {
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 New-ItemProperty -Path $runKey -Name 'RedragonBatteryTray' `
     -Value ('"' + $installedExe + '"') -PropertyType String -Force | Out-Null
+Start-Process -FilePath $installedExe -ArgumentList '--set-autostart' -Wait -WindowStyle Hidden
+$startupShortcut = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::Startup)) 'Redragon M913 Battery Tray.lnk'
+if (-not (Test-Path -LiteralPath $startupShortcut -PathType Leaf)) {
+    throw 'Could not create the current-user Startup shortcut.'
+}
 
 $uninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\RedragonM913BatteryTray'
 New-Item -Path $uninstallKey -Force | Out-Null
@@ -78,7 +87,7 @@ $estimatedSizeKb = [math]::Ceiling((Get-ChildItem -LiteralPath $installFolder -F
     Measure-Object -Property Length -Sum).Sum / 1KB)
 $uninstallValues = @{
     DisplayName = 'Redragon M913 Battery Tray'
-    DisplayVersion = '1.5.3'
+    DisplayVersion = '1.7.0'
     Publisher = 'Independent open-source utility'
     InstallLocation = $installFolder
     DisplayIcon = $installedExe
@@ -96,4 +105,4 @@ if (-not $NoStart) {
     Start-Process -FilePath $installedExe -WorkingDirectory $installFolder
 }
 
-Write-Host 'Installed Redragon M913 Battery Tray 1.5.3 for the current Windows user.'
+Write-Host 'Installed Redragon M913 Battery Tray 1.7.0 for the current Windows user.'
