@@ -54,6 +54,6 @@ Local status, error, bounded lifecycle and recovery files are stored in `%LOCALA
 
 ## Integrity and signing
 
-Release archives include `SHA256SUMS.txt` and a separate ZIP checksum. Version 1.6.0 is an unsigned open-source community release, so Windows can display an unknown-publisher or SmartScreen reputation warning. Verify the published SHA-256 checksum if Windows shows a warning.
+Release archives include `SHA256SUMS.txt` and a separate ZIP checksum. Version 1.7.1 is an unsigned open-source community release, so Windows can display an unknown-publisher or SmartScreen reputation warning. Verify the published SHA-256 checksum if Windows shows a warning.
 
 This project is unofficial and is not affiliated with or endorsed by Redragon. See [NOTICE.md](NOTICE.md).
